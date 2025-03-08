@@ -111,15 +111,15 @@ def pre_processing(full_ngh_finder, sampler, src, dst, ts, val_e_idx_l, MODE="te
         size = len(src_l_cut)
         src_l_fake, dst_l_fake = sampler.sample(size)
         load_dict["dst_fake"].append(dst_l_fake)
-        subgraph_src = ngh_finder.find_k_hop(src_l_cut, ts_l_cut, e_idx_l=e_l_cut)  #first: (batch, num_neighbors), second: [batch, num_neighbors * num_neighbors]
+        subgraph_src = ngh_finder.find_k_hop(2,src_l_cut, ts_l_cut,NUM_NEIGHBORS ,e_idx_l=e_l_cut)  #first: (batch, num_neighbors), second: [batch, num_neighbors * num_neighbors]
         node_records, eidx_records, t_records = subgraph_src
         load_dict["subgraph_src_0"].append(np.concatenate([node_records[0], eidx_records[0], t_records[0]], axis=-1))  #append([1, num_neighbors * 3]
         load_dict["subgraph_src_1"].append(np.concatenate([node_records[1], eidx_records[1], t_records[1]], axis=-1))    #append([1, num_neighbors**2 * 3]
-        subgraph_tgt = ngh_finder.find_k_hop(dst_l_cut, ts_l_cut, e_idx_l=e_l_cut)
+        subgraph_tgt = ngh_finder.find_k_hop(2,dst_l_cut, ts_l_cut,NUM_NEIGHBORS, e_idx_l=e_l_cut)
         node_records, eidx_records, t_records = subgraph_tgt
         load_dict["subgraph_tgt_0"].append(np.concatenate([node_records[0], eidx_records[0], t_records[0]], axis=-1))  #append([1, num_neighbors * 3]
         load_dict["subgraph_tgt_1"].append(np.concatenate([node_records[1], eidx_records[1], t_records[1]], axis=-1))    #append([1, num_neighbors**2 * 3]
-        subgraph_bgd = ngh_finder.find_k_hop(dst_l_fake, ts_l_cut, e_idx_l=None)
+        subgraph_bgd = ngh_finder.find_k_hop(2,dst_l_fake, ts_l_cut,NUM_NEIGHBORS, e_idx_l=None)
         node_records, eidx_records, t_records = subgraph_bgd
         load_dict["subgraph_bgd_0"].append(np.concatenate([node_records[0], eidx_records[0], t_records[0]], axis=-1))  #append([1, num_neighbors * 3]
         load_dict["subgraph_bgd_1"].append(np.concatenate([node_records[1], eidx_records[1], t_records[1]], axis=-1))    #append([1, num_neighbors**2 * 3]
