@@ -361,7 +361,7 @@ def calculate_edge(walks_src, walks_tgt, walks_bgd):
 
 
 ### Model initialize
-for MODE in ["train"]:  # You can add "test" if needed
+for MODE in ["train","test"]:  # You can add "test" if needed
     for data in ["enron"]:  # Available options: "wikipedia", "reddit", "uci", "mooc", "enron", "canparl", "uslegis"
         print(f"start {data} and {MODE}")
 
@@ -405,7 +405,7 @@ for MODE in ["train"]:  # You can add "test" if needed
         print(f"Done {data} {MODE}")
 
 
-"""data_path = osp.join(osp.dirname(osp.realpath(__file__)), '..', 'processed',
+data_path = osp.join(osp.dirname(osp.realpath(__file__)), '..', 'processed',
                         f'{data}_{MODE}_cat.h5')
 file = h5py.File(data_path,'r')
 walks_src = file["walks_src_new"][:]
@@ -417,5 +417,5 @@ edge_load = calculate_edge(walks_src, walks_tgt, walks_bgd)
 save_path = osp.join(osp.dirname(osp.realpath(__file__)), '..', 'processed',
                         f"{data}_{MODE}_edge.npy")
 np.save(save_path, edge_load)
-print(f"Done {data} {MODE}")"""
+print(f"Done {data} {MODE}")
 
