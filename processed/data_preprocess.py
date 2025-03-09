@@ -22,7 +22,7 @@ NUM_NEIGHBORS = degree_dict[data]
 
 
 def load_data(mode, data):
-    g_df = pd.read_csv(osp.join(osp.dirname(osp.realpath(__file__)), '..', 'processed/ml{}.csv'.format(data)))
+    g_df = pd.read_csv(osp.join(osp.dirname(osp.realpath(__file__)), '..', 'processed/ml_{}.csv'.format(data)))
     val_time, test_time = list(np.quantile(g_df.ts, [0.70, 0.85]))
     src_l = g_df.u.values
     dst_l = g_df.i.values
