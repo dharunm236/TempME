@@ -21,7 +21,7 @@ from TGN.tgn import TGN
 from TGAT import TGAT
 from utils import NeighborFinder, EarlyStopMonitor, RandEdgeSampler
 
-degree_dict = {"wikipedia": 20, "reddit": 20, "uci": 30, "mooc": 60, "enron": 30, "canparl": 30, "uslegis": 30}
+degree_dict = {"wikipedia": 20, "reddit": 20, "uci": 30, "mooc": 60, "enron": 30, "enron_sampled": 30, "canparl": 30, "uslegis": 30}
 
 ### Argument and global variables
 parser = argparse.ArgumentParser('Interface for temporal GNN on future link prediction')
@@ -103,7 +103,9 @@ for i in range(1):
     total_node_set = set(np.unique(np.hstack([g_df.u.values, g_df.i.values])))
     num_total_unique_nodes = len(total_node_set)
 
-    mask_node_set = set(random.sample(set(src_l[ts_l > val_time]).union(set(dst_l[ts_l > val_time])),
+    temp_val = list(set(src_l[ts_l > val_time]).union(set(dst_l[ts_l > val_time])))
+
+    mask_node_set = set(random.sample(temp_val,
                                       int(0.1 * num_total_unique_nodes)))
     mask_src_flag = g_df.u.map(lambda x: x in mask_node_set).values
     mask_dst_flag = g_df.i.map(lambda x: x in mask_node_set).values
@@ -145,7 +147,25 @@ for i in range(1):
     test_rand_sampler = RandEdgeSampler((train_src_l, val_src_l, test_src_l), (train_dst_l, val_dst_l, test_dst_l))
 
     ### Model initialize
-    args.device = torch.device('cuda:{}'.format(args.gpu))
+    if torch.cuda.is_available():
+        # First check how many GPUs are available and print their information
+        num_gpus = torch.cuda.device_count()
+        print(f"Found {num_gpus} CUDA-capable GPU(s)")
+        
+        for i in range(num_gpus):
+            print(f"GPU {i}: {torch.cuda.get_device_name(i)}")
+        
+        # Always use GPU 0 for the NVIDIA card
+        args.gpu = 0
+        torch.cuda.set_device(args.gpu)
+        args.device = torch.device(f'cuda:{args.gpu}')
+        print(f"CUDA is available. Using GPU {args.gpu}: {torch.cuda.get_device_name(args.gpu)}")
+        # Print memory information
+        print(f"GPU memory: {torch.cuda.get_device_properties(args.gpu).total_memory / 1e9:.2f} GB")
+    else:
+        args.device = torch.device('cpu')
+        print("CUDA is not available. Using CPU.")
+
     if args.base_type == "tgn":
         base_model = TGN(n_feat, e_feat, n_neighbors=args.n_degree, device=args.device, n_layers=args.n_layer,
                          n_heads=args.n_head, dropout=args.drop_out)

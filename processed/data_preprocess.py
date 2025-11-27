@@ -11,11 +11,13 @@ import pickle
 import torch
 import pandas as pd
 import numpy as np
-from utils import NeighborFinder
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from processed.utils import NeighborFinder, RandEdgeSampler
 
-degree_dict = {"wikipedia":20, "reddit":20 ,"uci":30 ,"mooc":60, "enron": 30, "canparl": 30, "uslegis": 30}
+degree_dict = {"wikipedia":20, "reddit":20 ,"uci":30 ,"mooc":60, "enron": 30, "enron_sampled": 30, "canparl": 30, "uslegis": 30}
 
-data = "wikipedia"
+data = "enron_sampled"
 NUM_NEIGHBORS = degree_dict[data]
 
 
@@ -32,8 +34,10 @@ def load_data(mode, data):
     random.seed(2023)
     total_node_set = set(np.unique(np.hstack([g_df.u.values, g_df.i.values])))
     num_total_unique_nodes = len(total_node_set)
-    mask_node_set = set(random.sample(set(src_l[ts_l > val_time]).union(set(dst_l[ts_l > val_time])),
-                                      int(0.1 * num_total_unique_nodes)))
+
+
+    nodes_after_val_time = list(set(src_l[ts_l > val_time]).union(set(dst_l[ts_l > val_time])))
+    mask_node_set = set(random.sample(nodes_after_val_time,int(0.1 * num_total_unique_nodes)))
     mask_src_flag = g_df.u.map(lambda x: x in mask_node_set).values
     mask_dst_flag = g_df.i.map(lambda x: x in mask_node_set).values
     none_node_flag = (1 - mask_src_flag) * (1 - mask_dst_flag)
@@ -107,15 +111,15 @@ def pre_processing(full_ngh_finder, sampler, src, dst, ts, val_e_idx_l, MODE="te
         size = len(src_l_cut)
         src_l_fake, dst_l_fake = sampler.sample(size)
         load_dict["dst_fake"].append(dst_l_fake)
-        subgraph_src = ngh_finder.find_k_hop(src_l_cut, ts_l_cut, e_idx_l=e_l_cut)  #first: (batch, num_neighbors), second: [batch, num_neighbors * num_neighbors]
+        subgraph_src = ngh_finder.find_k_hop(2,src_l_cut, ts_l_cut,NUM_NEIGHBORS, e_idx_l=e_l_cut)  #first: (batch, num_neighbors), second: [batch, num_neighbors * num_neighbors]
         node_records, eidx_records, t_records = subgraph_src
         load_dict["subgraph_src_0"].append(np.concatenate([node_records[0], eidx_records[0], t_records[0]], axis=-1))  #append([1, num_neighbors * 3]
         load_dict["subgraph_src_1"].append(np.concatenate([node_records[1], eidx_records[1], t_records[1]], axis=-1))    #append([1, num_neighbors**2 * 3]
-        subgraph_tgt = ngh_finder.find_k_hop(dst_l_cut, ts_l_cut, e_idx_l=e_l_cut)
+        subgraph_tgt = ngh_finder.find_k_hop(2,dst_l_cut, ts_l_cut,NUM_NEIGHBORS,  e_idx_l=e_l_cut)
         node_records, eidx_records, t_records = subgraph_tgt
         load_dict["subgraph_tgt_0"].append(np.concatenate([node_records[0], eidx_records[0], t_records[0]], axis=-1))  #append([1, num_neighbors * 3]
         load_dict["subgraph_tgt_1"].append(np.concatenate([node_records[1], eidx_records[1], t_records[1]], axis=-1))    #append([1, num_neighbors**2 * 3]
-        subgraph_bgd = ngh_finder.find_k_hop(dst_l_fake, ts_l_cut, e_idx_l=None)
+        subgraph_bgd = ngh_finder.find_k_hop(2,dst_l_fake, ts_l_cut,NUM_NEIGHBORS,  e_idx_l=None)
         node_records, eidx_records, t_records = subgraph_bgd
         load_dict["subgraph_bgd_0"].append(np.concatenate([node_records[0], eidx_records[0], t_records[0]], axis=-1))  #append([1, num_neighbors * 3]
         load_dict["subgraph_bgd_1"].append(np.concatenate([node_records[1], eidx_records[1], t_records[1]], axis=-1))    #append([1, num_neighbors**2 * 3]
@@ -353,61 +357,64 @@ def calculate_edge(walks_src, walks_tgt, walks_bgd):
 
 
 
-# data_path = osp.join(osp.dirname(osp.realpath(__file__)), '..', 'processed',
-#                         f'{data}_{MODE}_cat.h5')
-# file = h5py.File(data_path,'r')
-# walks_src = file["walks_src_new"][:]
-# walks_tgt = file["walks_tgt_new"][:]
-# walks_bgd = file["walks_bgd_new"][:]
-# file.close()
-# print("start edge_features")
-# edge_load = calculate_edge(walks_src, walks_tgt, walks_bgd)
-# save_path = osp.join(osp.dirname(osp.realpath(__file__)), '..', 'processed',
-#                         f"{data}_{MODE}_edge.npy")
-# np.save(save_path, edge_load)
-# print(f"Done {data} {MODE}")
 
 
 
 ### Model initialize
-# for MODE in [ "train"]:
-#     for data in ["wikipedia"]:
-#         print(f"start {data} and {MODE}")
-#         gnn_model_path = osp.join(osp.dirname(osp.realpath(__file__)), '..', 'params', 'tgnn', f'{model_name}_{data}.pt')
-#         tgat = torch.load(gnn_model_path)
-#         tgat = tgat.to(device)
-#
-#         rand_sampler, test_src_l, test_dst_l, test_ts_l, test_label_l, test_e_idx_l, finder = load_data(mode=MODE, data=data)
-#         tgat.ngh_finder = finder
-#         pre_processing(tgat, rand_sampler, test_src_l, test_dst_l, test_ts_l, test_e_idx_l, MODE=MODE, data=data)
-#
-#         file = h5py.File(f'{data}_{MODE}.h5','r')
-#         subgraph_src_0 = file["subgraph_src_0"][:]
-#         subgraph_src_1 = file["subgraph_src_1"][:]
-#         subgraph_tgt_0 = file["subgraph_tgt_0"][:]
-#         subgraph_tgt_1 = file["subgraph_tgt_1"][:]
-#         subgraph_bgd_0 = file["subgraph_bgd_0"][:]
-#         subgraph_bgd_1 = file["subgraph_bgd_1"][:]
-#         walks_src = file["walks_src"][:]
-#         walks_tgt = file["walks_tgt"][:]
-#         walks_bgd = file["walks_bgd"][:]
-#         dst_fake = file["dst_fake"][:]
-#         file.close()
-#
-#         walks_src_new, walks_tgt_new, walks_bgd_new = marginal(walks_src, walks_tgt, walks_bgd)
-#         file_new = h5py.File(f"{data}_{MODE}_cat.h5", "w")
-#         file_new.create_dataset("subgraph_src_0", data=subgraph_src_0)
-#         file_new.create_dataset("subgraph_src_1", data=subgraph_src_1)
-#         file_new.create_dataset("subgraph_tgt_0", data=subgraph_tgt_0)
-#         file_new.create_dataset("subgraph_tgt_1", data=subgraph_tgt_1)
-#         file_new.create_dataset("subgraph_bgd_0", data=subgraph_bgd_0)
-#         file_new.create_dataset("subgraph_bgd_1", data=subgraph_bgd_1)
-#         file_new.create_dataset("walks_src_new", data=walks_src_new)
-#         file_new.create_dataset("walks_tgt_new", data=walks_tgt_new)
-#         file_new.create_dataset("walks_bgd_new", data=walks_bgd_new)
-#         file_new.create_dataset("dst_fake", data=dst_fake)
-#         file_new.close()
-#         print(f"Done {data} {MODE}")
-#
-#
+for MODE in ["train" , "test"]:  # You can add "test" if needed
+    for data in ["enron_sampled"]:  # Available options: "wikipedia", "reddit", "uci", "mooc", "enron", "enron_sampled", "canparl", "uslegis"
+        print(f"start {data} and {MODE}")
 
+        # Load data
+        rand_sampler, test_src_l, test_dst_l, test_ts_l, test_label_l, test_e_idx_l, finder = load_data(mode=MODE, data=data)
+
+        # Preprocess the data
+        ngh_finder = finder  # You need to define ngh_finder - it's missing in the uncommented section
+        pre_processing(finder, rand_sampler, test_src_l, test_dst_l, test_ts_l, test_e_idx_l, MODE=MODE, data=data)
+
+        # Process the generated H5 file
+        file = h5py.File(f'{data}_{MODE}.h5','r')
+        subgraph_src_0 = file["subgraph_src_0"][:]
+        subgraph_src_1 = file["subgraph_src_1"][:]
+        subgraph_tgt_0 = file["subgraph_tgt_0"][:]
+        subgraph_tgt_1 = file["subgraph_tgt_1"][:]
+        subgraph_bgd_0 = file["subgraph_bgd_0"][:]
+        subgraph_bgd_1 = file["subgraph_bgd_1"][:]
+        walks_src = file["walks_src"][:]
+        walks_tgt = file["walks_tgt"][:]
+        walks_bgd = file["walks_bgd"][:]
+        dst_fake = file["dst_fake"][:]
+        file.close()
+
+        # Generate marginal data
+        walks_src_new, walks_tgt_new, walks_bgd_new = marginal(walks_src, walks_tgt, walks_bgd)
+
+        # Save processed data
+        file_new = h5py.File(f"{data}_{MODE}_cat.h5", "w")
+        file_new.create_dataset("subgraph_src_0", data=subgraph_src_0)
+        file_new.create_dataset("subgraph_src_1", data=subgraph_src_1)
+        file_new.create_dataset("subgraph_tgt_0", data=subgraph_tgt_0)
+        file_new.create_dataset("subgraph_tgt_1", data=subgraph_tgt_1)
+        file_new.create_dataset("subgraph_bgd_0", data=subgraph_bgd_0)
+        file_new.create_dataset("subgraph_bgd_1", data=subgraph_bgd_1)
+        file_new.create_dataset("walks_src_new", data=walks_src_new)
+        file_new.create_dataset("walks_tgt_new", data=walks_tgt_new)
+        file_new.create_dataset("walks_bgd_new", data=walks_bgd_new)
+        file_new.create_dataset("dst_fake", data=dst_fake)
+        file_new.close()
+        print(f"Done {data} {MODE}")
+
+        # Calculate edge features (inside the loop)
+        data_path = osp.join(osp.dirname(osp.realpath(__file__)), '..', 'processed',
+                                f'{data}_{MODE}_cat.h5')
+        file = h5py.File(data_path,'r')
+        walks_src = file["walks_src_new"][:]
+        walks_tgt = file["walks_tgt_new"][:]
+        walks_bgd = file["walks_bgd_new"][:]
+        file.close()
+        print("start edge_features")
+        edge_load = calculate_edge(walks_src, walks_tgt, walks_bgd)
+        save_path = osp.join(osp.dirname(osp.realpath(__file__)), '..', 'processed',
+                                f"{data}_{MODE}_edge.npy")
+        np.save(save_path, edge_load)
+        print(f"Done {data} {MODE}")

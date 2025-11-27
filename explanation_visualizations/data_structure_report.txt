@@ -1,0 +1,37 @@
+# TempME Data Structure Report
+
+## Walks Structure
+- Walks is a tuple with 5 elements
+- Item 0: numpy array with shape (1, 90, 6) and dtype int64
+- Item 1: numpy array with shape (1, 90, 3) and dtype int64
+- Item 2: numpy array with shape (1, 90, 3) and dtype float64
+- Item 3: numpy array with shape (1, 90, 1) and dtype int64
+- Item 4: numpy array with shape (1, 90, 1) and dtype float64
+
+## Subgraph Structure
+- Subgraph is a tuple with 3 elements
+- Item 0: list with 2 elements
+- Item 1: list with 2 elements
+- Item 2: list with 2 elements
+
+## Understanding TempME Data
+1. **Walks**: Represent temporal walks in the graph capturing interaction patterns
+   - Node sequences: Which nodes interact
+   - Edge sequences: The connections between nodes
+   - Time sequences: When these interactions happen
+
+2. **Subgraphs**: Represent the local neighborhood structure
+   - Node records: Which nodes are involved
+   - Edge records: How nodes are connected
+   - Time records: Temporal information
+
+3. **Link Prediction Task**:
+   - **Input**: Source node, target node, and their temporal subgraphs
+   - **Output**: Probability of future interaction between source and target
+   - **Explanation**: Identifies which temporal patterns influenced the prediction
+
+4. **Visualization Guide**:
+   - **Edge Importance Heatmaps**: Show which connections most influenced the prediction
+   - **Component Visualizations**: Compare importance of source vs target patterns
+   - **Temporal Walk Example**: Shows how nodes interact over time in a specific walk
+   - **Subgraph Structure**: Shows the connectivity pattern in the local neighborhood
