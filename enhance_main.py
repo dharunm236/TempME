@@ -51,7 +51,7 @@ def init_tensorboard(args):
     print(f"TensorBoard logging initialized at {log_dir}/{run_name}")
     return writer
 
-degree_dict = {"wikipedia":20, "reddit":20 ,"uci":30 ,"mooc":60, "enron": 30, "enron_sampled": 30, "canparl": 30, "uslegis": 30}
+degree_dict = {"wikipedia":20, "reddit":20 ,"uci":30 ,"mooc":60, "enron": 30, "enron_sampled": 30, "canparl": 30, "uslegis": 30, "uslegis_sampled": 30}
 ### Argument and global variables
 parser = argparse.ArgumentParser('Motif Enhancement Verification')
 parser.add_argument('--gpu', type=int, default=0, help='idx for the gpu to use')

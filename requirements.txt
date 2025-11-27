@@ -5,3 +5,6 @@ torch-scatter
 numba
 tqdm
 h5py
+matplotlib
+seaborn
+scikit-learn

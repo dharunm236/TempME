@@ -25,7 +25,7 @@ def main(args):
     
     # Set default degree based on dataset
     degree_dict = {"wikipedia": 20, "reddit": 20, "uci": 30, "mooc": 60, 
-                  "enron": 30, "enron_sampled": 30, "canparl": 30, "uslegis": 30}
+                  "enron": 30, "enron_sampled": 30, "canparl": 30, "uslegis": 30, "uslegis_sampled": 30}
     if args.n_degree is None:
         args.n_degree = degree_dict.get(args.data, 20)
     print(f"Using n_degree={args.n_degree}")

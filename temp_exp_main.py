@@ -25,7 +25,7 @@ from GraphM import GraphMixer
 from TGN.tgn import TGN
 
 
-degree_dict = {"wikipedia": 20, "reddit": 20, "uci": 30, "mooc": 60, "enron": 30, "enron_sampled": 30, "canparl": 30, "uslegis": 30}
+degree_dict = {"wikipedia": 20, "reddit": 20, "uci": 30, "mooc": 60, "enron": 30, "enron_sampled": 30, "canparl": 30, "uslegis": 30, "uslegis_sampled": 30}
 
 parser = argparse.ArgumentParser('Interface for temporal explanation')
 parser.add_argument('--gpu', type=int, default=0, help='idx for the gpu to use')
