@@ -13,11 +13,19 @@ import pandas as pd
 import numpy as np
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+<<<<<<< HEAD
 from processed.utils import NeighborFinder, RandEdgeSampler
+=======
+from utils import NeighborFinder, RandEdgeSampler
+>>>>>>> bf0f1d7c6d0218ea5241687ba2d3f42ad72773b6
 
 degree_dict = {"wikipedia":20, "reddit":20 ,"uci":30 ,"mooc":60, "enron": 30, "enron_sampled": 30, "canparl": 30, "uslegis": 30}
 
+<<<<<<< HEAD
 data = "enron_sampled"
+=======
+data = "enron"
+>>>>>>> bf0f1d7c6d0218ea5241687ba2d3f42ad72773b6
 NUM_NEIGHBORS = degree_dict[data]
 
 
@@ -362,7 +370,11 @@ def calculate_edge(walks_src, walks_tgt, walks_bgd):
 
 ### Model initialize
 for MODE in ["train" , "test"]:  # You can add "test" if needed
+<<<<<<< HEAD
     for data in ["enron_sampled"]:  # Available options: "wikipedia", "reddit", "uci", "mooc", "enron", "enron_sampled", "canparl", "uslegis"
+=======
+    for data in ["enron"]:  # Available options: "wikipedia", "reddit", "uci", "mooc", "enron", "canparl", "uslegis"
+>>>>>>> bf0f1d7c6d0218ea5241687ba2d3f42ad72773b6
         print(f"start {data} and {MODE}")
 
         # Load data
@@ -404,6 +416,7 @@ for MODE in ["train" , "test"]:  # You can add "test" if needed
         file_new.close()
         print(f"Done {data} {MODE}")
 
+<<<<<<< HEAD
         # Calculate edge features (inside the loop)
         data_path = osp.join(osp.dirname(osp.realpath(__file__)), '..', 'processed',
                                 f'{data}_{MODE}_cat.h5')
@@ -418,3 +431,19 @@ for MODE in ["train" , "test"]:  # You can add "test" if needed
                                 f"{data}_{MODE}_edge.npy")
         np.save(save_path, edge_load)
         print(f"Done {data} {MODE}")
+=======
+
+    data_path = osp.join(osp.dirname(osp.realpath(__file__)), '..', 'processed',
+                            f'{data}_{MODE}_cat.h5')
+    file = h5py.File(data_path,'r')
+    walks_src = file["walks_src_new"][:]
+    walks_tgt = file["walks_tgt_new"][:]
+    walks_bgd = file["walks_bgd_new"][:]
+    file.close()
+    print("start edge_features")
+    edge_load = calculate_edge(walks_src, walks_tgt, walks_bgd)
+    save_path = osp.join(osp.dirname(osp.realpath(__file__)), '..', 'processed',
+                            f"{data}_{MODE}_edge.npy")
+    np.save(save_path, edge_load)
+    print(f"Done {data} {MODE}")
+>>>>>>> bf0f1d7c6d0218ea5241687ba2d3f42ad72773b6

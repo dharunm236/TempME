@@ -102,10 +102,15 @@ for i in range(1):
 
     total_node_set = set(np.unique(np.hstack([g_df.u.values, g_df.i.values])))
     num_total_unique_nodes = len(total_node_set)
+<<<<<<< HEAD
 
     temp_val = list(set(src_l[ts_l > val_time]).union(set(dst_l[ts_l > val_time])))
 
     mask_node_set = set(random.sample(temp_val,
+=======
+    valgreaterts = list(set(src_l[ts_l > val_time]).union(set(dst_l[ts_l > val_time])))
+    mask_node_set = set(random.sample(valgreaterts,
+>>>>>>> bf0f1d7c6d0218ea5241687ba2d3f42ad72773b6
                                       int(0.1 * num_total_unique_nodes)))
     mask_src_flag = g_df.u.map(lambda x: x in mask_node_set).values
     mask_dst_flag = g_df.i.map(lambda x: x in mask_node_set).values
